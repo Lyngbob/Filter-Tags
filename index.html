@@ -150,10 +150,16 @@
                 connectBtn.innerText = "Uploader...";
                 const encoder = new TextEncoder();
 
+                // Skriv med små pauser for at undgå Bluetooth-overbelastning
                 await window.char1.writeValue(encoder.encode(l1));
+                await new Promise(resolve => setTimeout(resolve, 150));
+                
                 await window.char2.writeValue(encoder.encode(l2));
+                await new Promise(resolve => setTimeout(resolve, 150));
+                
                 await window.char3.writeValue(encoder.encode(l3));
 
+                // Afbryd forbindelsen så skærmen kan opdatere
                 bluetoothDevice.gatt.disconnect();
 
                 connectBtn.innerText = "Upload færdig! ✓";
