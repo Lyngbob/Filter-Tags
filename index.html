@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T5 Filter Tag Controller</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --accent-color: #3b82f6;
+            --accent-hover: #2563eb;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border-color: #374151;
+            --success-color: #10b981;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-size: 1.25rem;
+            margin-top: 0;
+            margin-bottom: 8px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #ef4444;
+        }
+
+        .dot.connected {
+            background-color: var(--success-color);
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            background: #2d2d2d;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-size: 1rem;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent-color);
+        }
+
+        .presets-section {
+            margin-bottom: 24px;
+        }
+
+        .presets-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+
+        .preset-btn {
+            background: #2d2d2d;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 4px;
+            font-size: 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .preset-btn:hover {
+            background: #374151;
+            border-color: var(--accent-color);
+        }
+
+        .action-btn {
+            width: 100%;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .action-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .action-btn:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>T5 Filter Tag</h1>
+        <div class="status-badge">
+            <span id="statusDot" class="dot"></span>
+            <span id="statusText">Ikke forbundet</span>
+        </div>
+
+        <div class="input-group">
+            <label>Top Linje (Filter 1)</label>
+            <input type="text" id="line1" value="ND 0.3 (1 Stop)">
+        </div>
+
+        <div class="input-group">
+            <label>Midterste Linje (Filter 2)</label>
+            <input type="text" id="line2" value="ND 0.6 (2 Stops)">
+        </div>
+
+        <div class="input-group">
+            <label>Bund Linje (Filter 3)</label>
+            <input type="text" id="line3" value="ND 0.9 (3 Stops)">
+        </div>
+
+        <div class="presets-section">
+            <label>Hurtigvalg (Sætter i top)</label>
+            <div class="presets-grid">
+                <button class="preset-btn" onclick="setPreset('ND 0.3 (1 Stop)')">0.3</button>
+                <button class="preset-btn" onclick="setPreset('ND 0.6 (2 Stops)')">0.6</button>
+                <button class="preset-btn" onclick="setPreset('ND 0.9 (3 Stops)')">0.9</button>
+                <button class="preset-btn" onclick="setPreset('ND 1.2 (4 Stops)')">1.2</button>
+                <button class="preset-btn" onclick="setPreset('ND 1.8 (6 Stops)')">1.8</button>
+                <button class="preset-btn" onclick="setPreset('ND 3.0 (10 Stops)')">3.0</button>
+                <button class="preset-btn" onclick="setPreset('POLA')">POLA</button>
+                <button class="preset-btn" onclick="setPreset('-')">Tom (-)</button>
+            </div>
+        </div>
+
+        <button class="action-btn" id="connectBtn" onclick="connectAndUpload()">Forbind & Upload</button>
+    </div>
+
+    <script>
+        const SERVICE_UUID = "5fafc201-1fb5-459e-8fcc-c5c9c331914b";
+        const CHAR_UUID_1 = "ceb5483e-36e1-4688-b7f5-ea07361b26a1";
+        const CHAR_UUID_2 = "ceb5483e-36e1-4688-b7f5-ea07361b26a2";
+        const CHAR_UUID_3 = "ceb5483e-36e1-4688-b7f5-ea07361b26a3";
+
+        let bluetoothDevice = null;
+
+        function setPreset(val) {
+            document.getElementById('line1').value = val;
+        }
+
+        async function connectAndUpload() {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            const connectBtn = document.getElementById('connectBtn');
+
+            const l1 = document.getElementById('line1').value;
+            const l2 = document.getElementById('line2').value;
+            const l3 = document.getElementById('line3').value;
+
+            try {
+                if (!bluetoothDevice || !bluetoothDevice.gatt.connected) {
+                    statusText.innerText = "Søger efter enhed...";
+                    bluetoothDevice = await navigator.bluetooth.requestDevice({
+                        filters: [{ namePrefix: "T5" }, { services: [SERVICE_UUID] }],
+                        optionalServices: [SERVICE_UUID]
+                    });
+
+                    bluetoothDevice.addEventListener('gattserverdisconnected', onDisconnected);
+
+                    statusText.innerText = "Forbinder til GATT...";
+                    const server = await bluetoothDevice.gatt.connect();
+
+                    statusText.innerText = "Henter service...";
+                    const service = await server.getPrimaryService(SERVICE_UUID);
+
+                    window.char1 = await service.getCharacteristic(CHAR_UUID_1);
+                    window.char2 = await service.getCharacteristic(CHAR_UUID_2);
+                    window.char3 = await service.getCharacteristic(CHAR_UUID_3);
+
+                    statusDot.classList.add('connected');
+                    statusText.innerText = "Forbundet!";
+                }
+
+                connectBtn.innerText = "Uploader...";
+                const encoder = new TextEncoder();
+
+                await window.char1.writeValue(encoder.encode(l1));
+                await window.char2.writeValue(encoder.encode(l2));
+                await window.char3.writeValue(encoder.encode(l3));
+
+                connectBtn.innerText = "Upload færdig! ✓";
+                setTimeout(() => {
+                    connectBtn.innerText = "Forbind & Upload";
+                }, 2500);
+
+            } catch (error) {
+                console.error(error);
+                statusText.innerText = "Fejl / Afbrudt";
+                statusDot.classList.remove('connected');
+                connectBtn.innerText = "Forbind & Upload";
+            }
+        }
+
+        function onDisconnected() {
+            document.getElementById('statusDot').classList.remove('connected');
+            document.getElementById('statusText').innerText = "Ikke forbundet";
+            bluetoothDevice = null;
+        }
+    </script>
+</body>
+</html>
