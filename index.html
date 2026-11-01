@@ -154,7 +154,6 @@
                 await window.char2.writeValue(encoder.encode(l2));
                 await window.char3.writeValue(encoder.encode(l3));
 
-                // Afbryd forbindelsen øjeblikkeligt så e-paper kan opdatere uden timeout
                 bluetoothDevice.gatt.disconnect();
 
                 connectBtn.innerText = "Upload færdig! ✓";
